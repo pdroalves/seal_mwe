@@ -2,6 +2,9 @@
 #include <seal/seal.h>
 #include <random>
 #include <vector>
+#include <seal/util/polycore.h>
+#include "seal/util/rlwe.h"
+#include "seal/util/polyarithsmallmod.h"
 
 using namespace seal;
 
@@ -54,6 +57,7 @@ inline void print_vector(std::vector<T> vec, std::size_t print_size = 4, int pre
 }
 
 int main(){
+    
     // Parameters
     EncryptionParameters parms(scheme_type::ckks);
 
@@ -66,14 +70,73 @@ int main(){
     SEALContext context(parms);
     
     // Initialize keys
-    int num_parties = 4;
-    std::vector<SecretKey> secret_keys;
     KeyGenerator keygen(context);
+    int num_parties = 4;
+    std::cout << "num_parties: " << num_parties << std::endl;
+    std::vector<SecretKey> secret_keys;
 
     // It party runs the default algorithm to generate a secret key
     // The outcome will be its share of the ideal secret key
     for(int i = 0; i < num_parties; i++)
         secret_keys.push_back(keygen.secret_key());
 
+    auto p1 = keygen.create_p1();
+    std::vector<PublicKey> public_keys(num_parties);
+    for(int i = 0; i < num_parties; i++)
+        keygen.create_mpc_share_public_key(p1, public_keys[i]);
     
+    PublicKey public_key;
+    keygen.create_collective_public_key(public_key, public_keys);
+
+    Evaluator evaluator(context);
+    CKKSEncoder encoder(context);
+    Ciphertext c0, c1, c2;
+    Plaintext pt0, pt1, pt2;
+    Encryptor encryptor(context, public_key);
+
+    std::vector<double> input(poly_modulus_degree>>1);
+    input[0] = 3.14159265;
+    encoder.encode(input, scale, pt0);
+    encryptor.encrypt(pt0, c0);
+
+    input[0] = 0.4;
+    encoder.encode(input, scale, pt1);
+    encryptor.encrypt(pt1, c1);
+    
+    input[0] = 1.0;
+    encoder.encode(input, scale, pt2);
+    encryptor.encrypt(pt2, c2);
+
+    // Computes p0 * p1 + p2
+    Ciphertext cR;
+    // evaluator.multiply(c0, c1, cR);
+    // evaluator.relinearize_inplace(cR, relin_keys);
+    // evaluator.rescale_to_next_inplace(cR);
+
+    // Discards not used upper levels of c2 to match cR
+    // parms_id_type last_parms_id = cR.parms_id();
+    // evaluator.mod_switch_to_inplace(c2, last_parms_id);
+    // cR.scale() = scale;
+    evaluator.add(c1, c2, cR);
+
+    /*
+    Decrypt, decode, and print the result.
+    */
+    auto &coeff_modulus = parms.coeff_modulus();
+    size_t coeff_count = parms.poly_modulus_degree();
+    Plaintext ptR;
+    Decryptor decryptor(context, secret_keys[0]);
+    decryptor.decrypt(cR, ptR);
+    for(int i = 1; i < num_parties; i++){
+        Plaintext pt_share;
+        
+        Decryptor decryptor(context, secret_keys[i]);
+        decryptor.combined_decrypt(cR, ptR);
+    }
+    std::vector<double> result;
+    encoder.decode(ptR, result);
+
+    std::cout << "Computed result:" << std::endl;
+    print_vector(result, 3, 7);
+
 }
