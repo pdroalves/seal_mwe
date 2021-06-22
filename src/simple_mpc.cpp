@@ -80,14 +80,32 @@ int main(){
     for(int i = 0; i < num_parties; i++)
         secret_keys.push_back(keygen.secret_key());
 
+    // Collective public key
     auto p1 = keygen.create_p1();
     std::vector<PublicKey> public_keys(num_parties);
     for(int i = 0; i < num_parties; i++)
         keygen.create_mpc_share_public_key(p1, public_keys[i]);
-    
     PublicKey public_key;
     keygen.create_collective_public_key(public_key, public_keys);
+    
+    // Collective relin key
+    auto a = keygen.create_p1();
+    std::vector<RelinKeys> relin_keys_st1(num_parties);
+    for(int i = 0; i < num_parties; i++)
+        keygen.execute_mpc_step1_relin_keys(a, relin_keys_st1[i]);
+    RelinKeys rlk_s1;
+    keygen.combine_relin_keys(rlk_s1, relin_keys_st1);
 
+    std::vector<RelinKeys> relin_keys_st2(num_parties);
+    for(int i = 0; i < num_parties; i++)
+        keygen.execute_mpc_step2_relin_keys(rlk_s1, relin_keys_st2[i]);
+    RelinKeys rlk_s2;
+    keygen.combine_relin_keys(rlk_s2, relin_keys_st2);
+
+    RelinKeys relin_keys;
+    keygen.create_collective_relin_keys(rlk_s1, rlk_s2, relin_keys);
+    
+    //
     Evaluator evaluator(context);
     CKKSEncoder encoder(context);
     Ciphertext c0, c1, c2;
@@ -109,15 +127,15 @@ int main(){
 
     // Computes p0 * p1 + p2
     Ciphertext cR;
-    // evaluator.multiply(c0, c1, cR);
-    // evaluator.relinearize_inplace(cR, relin_keys);
-    // evaluator.rescale_to_next_inplace(cR);
+    evaluator.multiply(c0, c2, cR);
+    evaluator.relinearize_inplace(cR, relin_keys);
+    evaluator.rescale_to_next_inplace(cR);
 
     // Discards not used upper levels of c2 to match cR
     // parms_id_type last_parms_id = cR.parms_id();
     // evaluator.mod_switch_to_inplace(c2, last_parms_id);
     // cR.scale() = scale;
-    evaluator.add(c1, c2, cR);
+    // evaluator.add(c1, c2, cR);
 
     /*
     Decrypt, decode, and print the result.

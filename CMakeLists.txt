@@ -25,6 +25,12 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(muladd SEAL::seal)
 
 ADD_EXECUTABLE(
+	testing_parameters
+	src/testing_parameters.cpp)
+
+TARGET_LINK_LIBRARIES(testing_parameters SEAL::seal)
+
+ADD_EXECUTABLE(
 	mpcseal
 	src/simple_mpc.cpp)
 
