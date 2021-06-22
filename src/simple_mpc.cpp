@@ -75,18 +75,21 @@ int main(){
     std::cout << "num_parties: " << num_parties << std::endl;
     std::vector<SecretKey> secret_keys;
 
-    // It party runs the default algorithm to generate a secret key
+    // Each party runs the default algorithm to generate a secret key
     // The outcome will be its share of the ideal secret key
     for(int i = 0; i < num_parties; i++)
         secret_keys.push_back(keygen.secret_key());
 
     // Collective public key
+    
+    // A public polynomial is sampled from the uniform distribution
     auto p1 = keygen.create_p1();
+    
+    // Each party runs a modified public key generator 
+    // to generate a part of the collective public key
     std::vector<PublicKey> public_keys(num_parties);
     for(int i = 0; i < num_parties; i++)
         keygen.create_mpc_share_public_key(p1, public_keys[i]);
-    PublicKey public_key;
-    keygen.create_collective_public_key(public_key, public_keys);
     
     // Collective relin key
     auto a = keygen.create_p1();
@@ -102,10 +105,13 @@ int main(){
     RelinKeys rlk_s2;
     keygen.combine_relin_keys(rlk_s2, relin_keys_st2);
 
+    // The collective public key is the outcome when we combine all the shares
+    PublicKey public_key;
+    keygen.create_collective_public_key(public_key, public_keys);
     RelinKeys relin_keys;
     keygen.create_collective_relin_keys(rlk_s1, rlk_s2, relin_keys);
     
-    //
+    // Do something
     Evaluator evaluator(context);
     CKKSEncoder encoder(context);
     Ciphertext c0, c1, c2;
@@ -145,6 +151,9 @@ int main(){
     Plaintext ptR;
     Decryptor decryptor(context, secret_keys[0]);
     decryptor.decrypt(cR, ptR);
+    // Each party runs default decryption with its share of the 
+    // secret key and combines to the decryption outcome of the other
+    // parties. 
     for(int i = 1; i < num_parties; i++){
         Plaintext pt_share;
         
