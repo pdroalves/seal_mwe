@@ -102,14 +102,14 @@ int main(){
     // Computes p0 * p1 + p2
     Ciphertext cR;
     evaluator.multiply(c0, c1, cR);
-    evaluator.relinearize_inplace(cR, relin_keys);
-    evaluator.rescale_to_next_inplace(cR);
+    // evaluator.relinearize_inplace(cR, relin_keys);
+    // evaluator.rescale_to_next_inplace(cR);
 
-    // Discards not used upper levels of c2 to match cR
-    parms_id_type last_parms_id = cR.parms_id();
-    evaluator.mod_switch_to_inplace(c2, last_parms_id);
-    cR.scale() = scale;
-    evaluator.add_inplace(cR, c2);
+    // // Discards not used upper levels of c2 to match cR
+    // parms_id_type last_parms_id = cR.parms_id();
+    // evaluator.mod_switch_to_inplace(c2, last_parms_id);
+    // cR.scale() = scale;
+    // evaluator.add_inplace(cR, c2);
 
     /*
     Decrypt, decode, and print the result.

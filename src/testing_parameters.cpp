@@ -70,10 +70,10 @@ int main(){
     // double scale = pow(2.0, 16);
     // 
     // 128-bit
-    size_t poly_modulus_degree = 1024;
-    parms.set_poly_modulus_degree(poly_modulus_degree);
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 27 }));
-    double scale = pow(2.0, 13);
+    // size_t poly_modulus_degree = 1024;
+    // parms.set_poly_modulus_degree(poly_modulus_degree);
+    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 27 }));
+    // double scale = pow(2.0, 13);
     // 
     // 80-bit
     // size_t poly_modulus_degree = 2048;
@@ -106,10 +106,10 @@ int main(){
     // double scale = pow(2.0, 21);
     // 
     // 128-bit
-    // size_t poly_modulus_degree = 4096;
-    // parms.set_poly_modulus_degree(poly_modulus_degree);
-    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 35, 21, 21, 30}));
-    // double scale = pow(2.0, 21);
+    size_t poly_modulus_degree = 4096;
+    parms.set_poly_modulus_degree(poly_modulus_degree);
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 35, 21, 21, 30}));
+    double scale = pow(2.0, 21);
     
     SEALContext context(parms, true, sec_level_type::none);
     
@@ -137,12 +137,9 @@ int main(){
     double m0 = 2.2;
     double m1 = 1.1;
     double mR = m0 * m1;
-    std::vector<double> input(poly_modulus_degree>>1);
-    input[0] = m0;
-    encoder.encode(input, scale, p0);
+    encoder.encode(m0, scale, p0);
     encryptor.encrypt(p0, c0);
-    input[0] = m1;
-    encoder.encode(input, scale, p1);
+    encoder.encode(m1, scale, p1);
     encryptor.encrypt(p1, c1);
 
     Ciphertext cR;
