@@ -129,7 +129,7 @@ int main(){
     double m0 = 3.14159265;
     double m1 = 0.4;
     double m2 = 1.0;
-    double mR = m0 * m2;
+    double mR = (m0 + m1) * m2;
     Encryptor encryptor(context, public_key);
 
     encoder.encode(m0, scale, pt0);
@@ -143,7 +143,8 @@ int main(){
 
     // Computes p0 * p1 + p2
     Ciphertext cR;
-    evaluator.multiply(c1, c2, cR);
+    evaluator.add(c0, c1, cR);
+    evaluator.multiply(cR, c2, cR);
     // evaluator.relinearize_inplace(cR, relin_keys);
     // evaluator.rescale_to_next_inplace(cR);
 
@@ -151,7 +152,6 @@ int main(){
     // parms_id_type last_parms_id = cR.parms_id();
     // evaluator.mod_switch_to_inplace(c2, last_parms_id);
     // cR.scale() = scale;
-    // evaluator.add(c1, c2, cR);
 
     /*
     Decrypt, decode, and print the result.
@@ -159,17 +159,31 @@ int main(){
     auto &coeff_modulus = parms.coeff_modulus();
     size_t coeff_count = parms.poly_modulus_degree();
     Plaintext ptR;
-    Decryptor decryptor(context, secret_keys[0]);
-    decryptor.decrypt(cR, ptR);
     // Each party runs default decryption with its share of the 
     // secret key and combines to the decryption outcome of the other
     // parties. 
-    for(int i = 1; i < num_parties; i++){
-        Plaintext pt_share;
+    if(cR.size() > 2){
+        Ciphertext cS;
+        for(int i = 0; i < num_parties-1; i++){
+            Decryptor decryptor(context, secret_keys[i]);
+            decryptor.combined_decrypt(cR, cS);
+        }
+        {
+            Decryptor decryptor(context, secret_keys[num_parties-1]);
+            decryptor.combined_decrypt(cR, cS, true);
+        }
+        cR = cS;
+    }
         
+    for(int i = 0; i < num_parties-1; i++){
         Decryptor decryptor(context, secret_keys[i]);
         decryptor.combined_decrypt(cR, ptR);
     }
+    {
+        Decryptor decryptor(context, secret_keys[num_parties-1]);
+        decryptor.combined_decrypt(cR, ptR, true);
+    }
+
     std::vector<double> result;
     encoder.decode(ptR, result);
 
