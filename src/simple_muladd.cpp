@@ -59,11 +59,16 @@ int main(){
 
     size_t poly_modulus_degree = 8192;
     parms.set_poly_modulus_degree(poly_modulus_degree);
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
+    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 54, 46, 46, 46, 46, 46, 46 })); // 80 bits
+    // double scale = pow(2.0, 46);
+    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 54, 36, 36, 36, 36, 36, 36 })); // 100 bits
+    // double scale = pow(2.0, 36
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 54, 26, 26, 26, 26, 26, 34 }));
+    double scale = pow(2.0, 26);
+    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
 
-    double scale = pow(2.0, 40);
     
-    SEALContext context(parms);
+    SEALContext context(parms, true, sec_level_type::none);
     
     // Initialize keys
     KeyGenerator keygen(context);
@@ -118,6 +123,7 @@ int main(){
     decryptor.decrypt(cR, pR);
     std::vector<double> result;
     encoder.decode(pR, result);
-    std::cout << "    + Computed result ...... Correct." << std::endl;
+    std::cout << "    + Computed result ......." << std::endl;
     print_vector(result, 3, 7);
+    std::cout << "Expected " << (3.14159265*0.4+1) << std::endl;
 }
