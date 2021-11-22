@@ -63,9 +63,10 @@ int main(){
     // double scale = pow(2.0, 46);
     // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 54, 36, 36, 36, 36, 36, 36 })); // 100 bits
     // double scale = pow(2.0, 36
-    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 54, 26, 26, 26, 26, 26, 34 }));
-    double scale = pow(2.0, 26);
-    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
+    // parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 54, 26, 26, 26, 26, 26, 34 }));
+    // double scale = pow(2.0, 26);
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
+    double scale = pow(2.0, 40);
 
     
     SEALContext context(parms, true, sec_level_type::none);
